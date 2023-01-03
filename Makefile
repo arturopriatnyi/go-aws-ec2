@@ -1,2 +1,7 @@
+all: build run
+
+build:
+	docker build . -t go-aws-ec2
+
 run:
-	go run cmd/go-aws-ec2/main.go
+	docker run -p 10000:10000 go-aws-ec2
