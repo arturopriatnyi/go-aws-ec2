@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
+	nethttp "net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go-aws-ec2/internal/http"
 
 	"go.uber.org/zap"
 )
@@ -22,19 +24,12 @@ func main() {
 	undo := zap.ReplaceGlobals(l)
 	defer undo()
 
-	s := &http.Server{
-		Addr: ":10000",
-		Handler: http.HandlerFunc(
-			func(w http.ResponseWriter, _ *http.Request) {
-				if _, err := w.Write([]byte("Hello from AWS EC2!")); err != nil {
-					l.Warn("response writing failed", zap.Error(err))
-				}
-			},
-		),
+	s := &nethttp.Server{
+		Addr:    ":10000",
+		Handler: http.NewHandler(),
 	}
-
 	go func() {
-		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.ListenAndServe(); err != nil && err != nethttp.ErrServerClosed {
 			l.Fatal("HTTP server didn't start", zap.Error(err))
 		}
 	}()
