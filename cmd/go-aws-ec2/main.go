@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"go-aws-ec2/internal/http"
+	"go-aws-ec2/pkg/counter"
 
 	"go.uber.org/zap"
 )
@@ -24,9 +25,12 @@ func main() {
 	undo := zap.ReplaceGlobals(l)
 	defer undo()
 
+	cms := counter.NewMemoryStore()
+	cm := counter.NewManager(cms)
+
 	s := &nethttp.Server{
 		Addr:    ":10000",
-		Handler: http.NewHandler(),
+		Handler: http.NewHandler(l, cm),
 	}
 	go func() {
 		if err := s.ListenAndServe(); err != nil && err != nethttp.ErrServerClosed {
