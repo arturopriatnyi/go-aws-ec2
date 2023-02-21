@@ -48,6 +48,20 @@ func (mr *MockCounterManagerMockRecorder) Add(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockCounterManager)(nil).Add), id)
 }
 
+// Delete mocks base method.
+func (m *MockCounterManager) Delete(id string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockCounterManagerMockRecorder) Delete(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCounterManager)(nil).Delete), id)
+}
+
 // Get mocks base method.
 func (m *MockCounterManager) Get(id string) (counter.Counter, error) {
 	m.ctrl.T.Helper()
@@ -61,4 +75,18 @@ func (m *MockCounterManager) Get(id string) (counter.Counter, error) {
 func (mr *MockCounterManagerMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCounterManager)(nil).Get), id)
+}
+
+// Inc mocks base method.
+func (m *MockCounterManager) Inc(id string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Inc", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Inc indicates an expected call of Inc.
+func (mr *MockCounterManagerMockRecorder) Inc(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inc", reflect.TypeOf((*MockCounterManager)(nil).Inc), id)
 }
