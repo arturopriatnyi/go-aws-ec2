@@ -133,6 +133,10 @@ func TestManager_Inc(t *testing.T) {
 					Return(Counter{ID: "id", Value: 1}, nil)
 				s.
 					EXPECT().
+					Delete("id").
+					Return(nil)
+				s.
+					EXPECT().
 					Store(Counter{ID: "id", Value: 2}).
 					Return(nil)
 
@@ -141,7 +145,7 @@ func TestManager_Inc(t *testing.T) {
 			id:      "id",
 			wantErr: nil,
 		},
-		"ErrNotFound": {
+		"LoadErrNotFound": {
 			s: func(c *gomock.Controller) Store {
 				s := NewMockStore(c)
 
@@ -149,6 +153,24 @@ func TestManager_Inc(t *testing.T) {
 					EXPECT().
 					Load("id").
 					Return(Counter{}, ErrNotFound)
+
+				return s
+			},
+			id:      "id",
+			wantErr: ErrNotFound,
+		},
+		"DeleteErrNotFound": {
+			s: func(c *gomock.Controller) Store {
+				s := NewMockStore(c)
+
+				s.
+					EXPECT().
+					Load("id").
+					Return(Counter{ID: "id", Value: 1}, nil)
+				s.
+					EXPECT().
+					Delete("id").
+					Return(ErrNotFound)
 
 				return s
 			},

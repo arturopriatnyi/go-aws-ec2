@@ -25,6 +25,9 @@ func (m *Manager) Inc(id string) error {
 	if err != nil {
 		return err
 	}
+	if err := m.s.Delete(counter.ID); err != nil {
+		return err
+	}
 
 	counter.Inc()
 
