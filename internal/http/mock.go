@@ -5,6 +5,7 @@
 package http
 
 import (
+	counter "go-aws-ec2/pkg/counter"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -45,4 +46,19 @@ func (m *MockCounterManager) Add(id string) error {
 func (mr *MockCounterManagerMockRecorder) Add(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockCounterManager)(nil).Add), id)
+}
+
+// Get mocks base method.
+func (m *MockCounterManager) Get(id string) (counter.Counter, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", id)
+	ret0, _ := ret[0].(counter.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockCounterManagerMockRecorder) Get(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCounterManager)(nil).Get), id)
 }

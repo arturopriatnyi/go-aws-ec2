@@ -135,3 +135,83 @@ func Test_addCounter(t *testing.T) {
 		})
 	}
 }
+
+func Test_getCounter(t *testing.T) {
+	for name, tt := range map[string]struct {
+		cm       func(c *gomock.Controller) CounterManager
+		id       string
+		wantCode int
+		wantBody string
+	}{
+		"OK": {
+			cm: func(c *gomock.Controller) CounterManager {
+				cm := NewMockCounterManager(c)
+
+				cm.
+					EXPECT().
+					Get("id").
+					Return(
+						counter.Counter{ID: "id", Value: 1},
+						nil,
+					)
+
+				return cm
+			},
+			id:       "id",
+			wantCode: http.StatusOK,
+			wantBody: `{"id":"id","value":1}`,
+		},
+		"NotFound": {
+			cm: func(c *gomock.Controller) CounterManager {
+				cm := NewMockCounterManager(c)
+
+				cm.
+					EXPECT().
+					Get("id").
+					Return(
+						counter.Counter{},
+						counter.ErrNotFound,
+					)
+
+				return cm
+			},
+			id:       "id",
+			wantCode: http.StatusNotFound,
+			wantBody: ``,
+		},
+		"InternalServerError": {
+			cm: func(c *gomock.Controller) CounterManager {
+				cm := NewMockCounterManager(c)
+
+				cm.
+					EXPECT().
+					Get("id").
+					Return(
+						counter.Counter{},
+						errors.New("unexpected error"),
+					)
+
+				return cm
+			},
+			id:       "id",
+			wantCode: http.StatusInternalServerError,
+			wantBody: ``,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = &http.Request{}
+			c.Params = []gin.Param{{Key: "id", Value: tt.id}}
+
+			getCounter(zap.NewNop(), tt.cm(gomock.NewController(t)))(c)
+
+			if w.Code != tt.wantCode {
+				t.Errorf("want status code: %d, got: %d", tt.wantCode, w.Code)
+			}
+			if w.Body.String() != tt.wantBody {
+				t.Errorf("want body: %s, got: %s", tt.wantBody, w.Body.String())
+			}
+		})
+	}
+}
