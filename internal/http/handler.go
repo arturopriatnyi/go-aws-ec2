@@ -15,6 +15,7 @@ import (
 type CounterManager interface {
 	Add(id string) error
 	Get(id string) (counter.Counter, error)
+	Inc(id string) error
 }
 
 func NewHandler(l *zap.Logger, cm CounterManager) http.Handler {
@@ -30,6 +31,7 @@ func NewHandler(l *zap.Logger, cm CounterManager) http.Handler {
 	counters := r.Group("/counters")
 	counters.POST("", addCounter(l, cm))
 	counters.GET("/:id", getCounter(l, cm))
+	counters.GET("/:id/inc", incCounter(l, cm))
 
 	return r
 }
@@ -102,6 +104,30 @@ func getCounter(l *zap.Logger, cm CounterManager) gin.HandlerFunc {
 				ID:    c.ID,
 				Value: c.Value,
 			})
+		case counter.ErrNotFound:
+			ctx.AbortWithStatus(http.StatusNotFound)
+		default:
+			l.Error(
+				"internal server error",
+				zap.String("uri", ctx.Request.RequestURI),
+				zap.String("id", id),
+				zap.Error(err),
+			)
+
+			ctx.AbortWithStatus(http.StatusInternalServerError)
+		}
+	}
+}
+
+func incCounter(l *zap.Logger, cm CounterManager) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		err := cm.Inc(id)
+
+		switch err {
+		case nil:
+			ctx.AbortWithStatus(http.StatusOK)
 		case counter.ErrNotFound:
 			ctx.AbortWithStatus(http.StatusNotFound)
 		default:
