@@ -22,3 +22,15 @@ services:
       - --web.page-title=Go AWS EC2
     ports:
       - "9090:9090"
+
+  grafana:
+    build:
+      context: ./tools/grafana
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:
