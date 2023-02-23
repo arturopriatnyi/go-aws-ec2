@@ -11,6 +11,7 @@ import (
 	"go-aws-ec2/internal/http"
 	"go-aws-ec2/pkg/counter"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
@@ -27,6 +28,8 @@ func main() {
 
 	cms := counter.NewMemoryStore()
 	cm := counter.NewManager(cms)
+
+	http.MustRegisterMetrics(prometheus.DefaultRegisterer)
 
 	s := &nethttp.Server{
 		Addr:    ":10000",

@@ -5,10 +5,12 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"go-aws-ec2/pkg/counter"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
@@ -22,12 +24,13 @@ type CounterManager interface {
 func NewHandler(l *zap.Logger, cm CounterManager) http.Handler {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
-	r.Use(gin.Recovery())
+	r.Use(gin.Recovery(), withInternalServerErrorCounter())
 	r.HandleMethodNotAllowed = true
 
 	r.NoRoute(noRoute())
 	r.NoMethod(noMethod())
 	r.GET("/health", health())
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	counters := r.Group("/counters")
 	counters.POST("", addCounter(l, cm))
@@ -62,6 +65,8 @@ type addCounterRequest struct {
 
 func addCounter(l *zap.Logger, cm CounterManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		start := time.Now()
+
 		var r addCounterRequest
 		if err := c.BindJSON(&r); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -73,6 +78,9 @@ func addCounter(l *zap.Logger, cm CounterManager) gin.HandlerFunc {
 		switch err {
 		case nil:
 			c.AbortWithStatus(http.StatusCreated)
+
+			defer addCounterRequestDurationHistogram.With(nil).Observe(time.Since(start).Seconds())
+			defer countersNumberGauge.With(nil).Inc()
 		case counter.ErrExists:
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
@@ -130,6 +138,8 @@ func incCounter(l *zap.Logger, cm CounterManager) gin.HandlerFunc {
 		switch err {
 		case nil:
 			ctx.AbortWithStatus(http.StatusOK)
+
+			defer incCounterCounter.With(nil).Inc()
 		case counter.ErrNotFound:
 			ctx.AbortWithStatus(http.StatusNotFound)
 		default:
@@ -154,6 +164,8 @@ func deleteCounter(l *zap.Logger, cm CounterManager) gin.HandlerFunc {
 		switch err {
 		case nil:
 			ctx.AbortWithStatus(http.StatusNoContent)
+
+			defer countersNumberGauge.With(nil).Dec()
 		case counter.ErrNotFound:
 			ctx.AbortWithStatus(http.StatusNotFound)
 		default:
