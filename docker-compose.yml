@@ -8,3 +8,29 @@ services:
     ports:
       - "10000:10000"
     restart: on-failure
+
+  prometheus:
+    build:
+      context: ./tools/prometheus
+      dockerfile: Dockerfile
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --log.level=warn
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.page-title=Go AWS EC2
+    ports:
+      - "9090:9090"
+
+  grafana:
+    build:
+      context: ./tools/grafana
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:
